@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCB Week 9 — International Financial System: Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest:   #132A13;
+    --mid:      #1E4021;
+    --gold:     #C8A84B;
+    --gold-lt:  #E2CC85;
+    --cream:    #F4F7EF;
+    --cream-dk: #E8EDD8;
+    --white:    #FFFFFF;
+    --text:     #1A2A1A;
+    --muted:    #5A7A5A;
+    --correct:  #1A6B35;
+    --wrong:    #8B2020;
+    --radius:   10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Source Sans 3', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; }
+
+  .header {
+    background: var(--forest); padding: 18px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 3px solid var(--gold); position: sticky; top: 0; z-index: 100;
+  }
+  .header-left { display: flex; flex-direction: column; gap: 2px; }
+  .header-label { font-size: 10px; font-weight: 600; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; }
+  .header-title { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--white); font-weight: 600; }
+  .score-badge { background: var(--mid); border: 1.5px solid var(--gold); border-radius: 8px; padding: 8px 18px; text-align: center; }
+  .score-label { font-size: 10px; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; }
+  .score-value { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--white); line-height: 1.1; }
+
+  .progress-wrap { background: var(--forest); padding: 0 32px 14px; }
+  .progress-track { height: 4px; background: var(--mid); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width 0.5s ease; }
+  .progress-text { font-size: 11px; color: #7A9B72; margin-top: 5px; letter-spacing: 1px; }
+
+  .nav-panel { background: var(--white); border-bottom: 1px solid var(--cream-dk); padding: 14px 32px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .nav-label { font-size: 11px; font-weight: 600; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-right: 6px; white-space: nowrap; }
+  .nav-btn {
+    width: 36px; height: 36px; border-radius: 6px; border: 1.5px solid var(--cream-dk);
+    background: var(--cream); font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    font-weight: 500; color: var(--muted); cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav-btn:hover { border-color: var(--gold); color: var(--forest); background: var(--cream-dk); }
+  .nav-btn.active { background: var(--forest); border-color: var(--forest); color: var(--gold); }
+  .nav-btn.answered-correct { background: var(--correct); border-color: var(--correct); color: white; }
+  .nav-btn.answered-wrong { background: var(--wrong); border-color: var(--wrong); color: white; }
+
+  .main { max-width: 820px; margin: 0 auto; padding: 32px 24px 60px; }
+
+  .question-card { background: var(--white); border-radius: var(--radius); box-shadow: 0 2px 16px rgba(19,42,19,0.07); overflow: hidden; animation: slideIn 0.25s ease; }
+  @keyframes slideIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+  .card-top { background: var(--forest); padding: 18px 24px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .q-meta { display: flex; flex-direction: column; gap: 4px; }
+  .q-number { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--gold); letter-spacing: 2px; }
+  .q-section { font-size: 11px; font-weight: 600; color: #7AAB7A; letter-spacing: 1.5px; text-transform: uppercase; }
+  .q-difficulty { font-size: 10px; letter-spacing: 1.5px; padding: 3px 10px; border-radius: 20px; font-weight: 600; text-transform: uppercase; white-space: nowrap; }
+  .diff-medium { background: rgba(200,168,75,0.2); color: var(--gold-lt); border: 1px solid rgba(200,168,75,0.35); }
+  .diff-hard   { background: rgba(139,32,32,0.25); color: #E08080; border: 1px solid rgba(139,32,32,0.4); }
+  .diff-calc   { background: rgba(42,92,42,0.3); color: #90C890; border: 1px solid rgba(42,92,42,0.5); }
+
+  .card-body { padding: 28px 28px 8px; }
+  .q-text { font-family: 'Playfair Display', serif; font-size: 19px; line-height: 1.55; color: var(--text); font-weight: 600; margin-bottom: 20px; }
+
+  .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 6px; }
+  .option-btn {
+    display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px;
+    border: 1.5px solid var(--cream-dk); border-radius: 8px; background: var(--cream);
+    cursor: pointer; text-align: left; transition: all 0.15s;
+    font-family: 'Source Sans 3', sans-serif; font-size: 15px; color: var(--text); line-height: 1.45; width: 100%;
+  }
+  .option-btn:not(.revealed):hover { border-color: var(--gold); background: #F0F5E6; transform: translateX(3px); }
+  .option-letter {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500;
+    min-width: 22px; height: 22px; border-radius: 4px; background: var(--cream-dk);
+    color: var(--muted); display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px; transition: all 0.15s;
+  }
+  .option-btn.correct { border-color: var(--correct); background: #E8F5E8; }
+  .option-btn.correct .option-letter { background: var(--correct); color: white; }
+  .option-btn.wrong { border-color: var(--wrong); background: #F5E8E8; }
+  .option-btn.wrong .option-letter { background: var(--wrong); color: white; }
+  .option-btn.dimmed { opacity: 0.45; }
+  .option-btn.revealed { cursor: default; }
+
+  .explanation { margin: 0 28px 24px; border-radius: 8px; padding: 16px 18px; font-size: 14px; line-height: 1.65; display: none; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+  .explanation.show { display: block; }
+  .explanation.correct-exp { background: #E8F5E8; border: 1px solid #C0DFC0; color: #1A4A1A; }
+  .explanation.wrong-exp   { background: #F5E8E8; border: 1px solid #DFC0C0; color: #4A1A1A; }
+  .exp-head { font-weight: 700; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .correct-exp .exp-head { color: var(--correct); }
+  .wrong-exp .exp-head   { color: var(--wrong); }
+
+  .card-footer { padding: 14px 28px 22px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .btn { padding: 10px 22px; border-radius: 7px; font-family: 'Source Sans 3', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
+  .btn-primary { background: var(--forest); color: var(--gold); border: 1.5px solid var(--gold); }
+  .btn-primary:hover { background: var(--mid); }
+  .btn-secondary { background: transparent; color: var(--muted); border: 1.5px solid var(--cream-dk); }
+  .btn-secondary:hover { border-color: var(--muted); color: var(--text); }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .nav-arrows { display: flex; gap: 8px; }
+  .btn-arrow { width: 38px; height: 38px; border-radius: 7px; border: 1.5px solid var(--cream-dk); background: var(--cream); color: var(--muted); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .btn-arrow:hover:not(:disabled) { border-color: var(--forest); color: var(--forest); }
+  .btn-arrow:disabled { opacity: 0.3; cursor: default; }
+
+  .results-panel { display: none; background: var(--white); border-radius: var(--radius); box-shadow: 0 2px 16px rgba(19,42,19,0.07); overflow: hidden; animation: slideIn 0.3s ease; }
+  .results-panel.show { display: block; }
+  .results-header { background: var(--forest); padding: 30px 32px; text-align: center; border-bottom: 3px solid var(--gold); }
+  .results-title { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--white); margin-bottom: 6px; }
+  .results-subtitle { font-size: 14px; color: #7AAB7A; letter-spacing: 1px; }
+  .big-score { font-family: 'Playfair Display', serif; font-size: 72px; color: var(--gold); line-height: 1; margin: 20px 0 8px; }
+  .results-body { padding: 28px 32px; }
+  .section-breakdown { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+  .breakdown-item { background: var(--cream); border-radius: 8px; padding: 12px 14px; border-left: 3px solid var(--gold); }
+  .breakdown-section { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 3px; }
+  .breakdown-score { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--forest); }
+  .btn-restart { display: block; width: 100%; padding: 14px; background: var(--forest); color: var(--gold); border: 2px solid var(--gold); border-radius: 8px; font-family: 'Playfair Display', serif; font-size: 17px; cursor: pointer; transition: all 0.15s; }
+  .btn-restart:hover { background: var(--mid); }
+
+  @media (max-width: 600px) {
+    .header { padding: 14px 16px; }
+    .nav-panel { padding: 12px 16px; }
+    .main { padding: 20px 12px 50px; }
+    .card-body { padding: 20px 18px 6px; }
+    .q-text { font-size: 17px; }
+    .card-footer { padding: 12px 18px 18px; }
+    .explanation { margin: 0 18px 18px; }
+    .section-breakdown { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <span class="header-label">Money, Credit &amp; Banking · Week 9</span>
+    <span class="header-title">International Financial System — Lecture Quiz</span>
+  </div>
+  <div class="score-badge">
+    <div class="score-label">Score</div>
+    <div class="score-value" id="scoreDisplay">0 / 0</div>
+  </div>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="progress-text" id="progressText">0 of 15 answered</div>
+</div>
+
+<div class="nav-panel">
+  <span class="nav-label">Jump to</span>
+  <div id="navGrid" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+</div>
+
+<div class="main">
+  <div id="questionCard" class="question-card"></div>
+  <div id="resultsPanel" class="results-panel"></div>
+</div>
+
+<script>
+// correct answer index distribution: A(0)×4, B(1)×4, C(2)×4, D(3)×3
+const QUESTIONS = [
+
+  // ── Q1  correct: A ──────────────────────────────────────────────────────
+  {
+    section: "Section 01 · FX Market", difficulty: "medium",
+    q: "In the foreign exchange market, a 'spot transaction' is best defined as:",
+    options: [
+      "An immediate exchange of bank deposits — typically settled within two business days — giving rise to the spot exchange rate",
+      "An agreement to exchange currencies at a price fixed today but settled at a specified future date",
+      "A central bank open-market operation designed to stabilise the domestic exchange rate",
+      "The purchase of foreign bonds using domestic currency at the prevailing market rate"
+    ],
+    correct: 0,
+    explanation: "A spot transaction involves the immediate exchange of bank deposits denominated in different currencies, conventionally settled within two business days. This is distinct from a forward transaction, where the exchange is agreed today but takes place at a specified future date. The rate for a spot deal is the spot exchange rate; the rate for a forward deal is the forward exchange rate."
+  },
+
+  // ── Q2  correct: C ──────────────────────────────────────────────────────
+  {
+    section: "Section 01 · FX Market", difficulty: "medium",
+    q: "If the British pound appreciates significantly against the US dollar, which trade effect would standard exchange rate theory predict?",
+    options: [
+      "UK exports become cheaper for American buyers and US goods become more expensive for UK consumers",
+      "Both UK exports and UK imports become simultaneously more expensive",
+      "UK exports become more expensive for American buyers and US goods become cheaper for UK consumers",
+      "The UK current account surplus widens as stronger sterling signals stronger economic fundamentals"
+    ],
+    correct: 2,
+    explanation: "Appreciation means the domestic currency buys more foreign currency. From an American buyer's perspective, each pound they must exchange now costs more dollars — so British goods become more expensive, reducing UK export competitiveness. Simultaneously, each pound buys more dollars, making US imports cheaper for UK consumers. The general rule: appreciation → exports ↑ cost, imports ↓ cost; depreciation → the reverse."
+  },
+
+  // ── Q3  correct: B ──────────────────────────────────────────────────────
+  {
+    section: "Section 02 · Long-Run Exchange Rates", difficulty: "medium",
+    q: "The theory of Purchasing Power Parity (PPP) predicts that exchange rates will adjust to:",
+    options: [
+      "Equalise nominal interest rates across countries in the long run",
+      "Equalise the purchasing power of currencies so that identical goods cost the same in both countries when expressed in a common currency",
+      "Maintain a fixed ratio between the domestic money supply and the exchange rate",
+      "Ensure trade balances are zero between any two trading partners"
+    ],
+    correct: 1,
+    explanation: "PPP holds that if identical goods are priced differently in two countries (once converted to a common currency), arbitrage will close the gap — traders buy in the cheap country and sell in the expensive one, pushing prices and exchange rates toward equality. PPP relies on goods being tradeable, identical, and free from trade barriers. In practice, it holds much better in the long run than the short run, and fails systematically for non-traded goods and services."
+  },
+
+  // ── Q4  correct: D ──────────────────────────────────────────────────────
+  {
+    section: "Section 02 · Long-Run Exchange Rates", difficulty: "hard",
+    q: "The Balassa-Samuelson effect explains a systematic deviation from PPP in which richer, more productive countries tend to have higher price levels. Which statement best describes the mechanism?",
+    options: [
+      "Richer countries impose higher tariffs, raising domestic prices above the PPP-implied level",
+      "PPP breaks down purely because trade barriers prevent arbitrage of goods across borders",
+      "Exchange rates in richer countries are driven by capital flows rather than goods prices, pushing the rate above PPP",
+      "Productivity gains in traded sectors raise wages economy-wide; because wages in non-traded sectors (e.g. haircuts) also rise but productivity there does not, non-traded goods prices are higher — raising the overall price level without undermining competitiveness"
+    ],
+    correct: 3,
+    explanation: "The Balassa-Samuelson mechanism works in two steps. First, productivity growth in the tradeable sector (manufacturing, tech) drives up wages there. Second, because workers are mobile across sectors, wages in non-traded services also rise — but without matching productivity gains. Non-traded prices therefore rise relative to the anchor country. This makes the overall price level in more productive countries systematically higher than PPP would predict, which is why the Big Mac Index consistently shows rich countries as 'overvalued'."
+  },
+
+  // ── Q5  correct: A ──────────────────────────────────────────────────────
+  {
+    section: "Section 02 · Long-Run Exchange Rates", difficulty: "medium",
+    q: "According to the long-run framework, if a country experiences a significant rise in productivity relative to its trading partners, the long-run exchange rate should:",
+    options: [
+      "Appreciate — higher productivity lowers production costs, raises export competitiveness, and increases foreign demand for domestic currency",
+      "Depreciate — productivity gains lower domestic prices, reducing the nominal exchange rate through the PPP mechanism",
+      "Remain unchanged — productivity affects real wages but not nominal exchange rates in the long run",
+      "Depreciate — higher productivity means more imports as domestic consumers become wealthier and demand more foreign goods"
+    ],
+    correct: 0,
+    explanation: "Higher relative productivity reduces unit production costs, making domestic goods cheaper for foreigners to purchase. Export demand rises, which requires foreigners to acquire more domestic currency — pushing up its value. The transmission runs: ↑ productivity → ↓ production costs → ↑ export competitiveness → ↑ demand for domestic currency → appreciation. This is one of the five long-run factors in the summary table: productivity ↑ → E* ↑."
+  },
+
+  // ── Q6  correct: B ──────────────────────────────────────────────────────
+  {
+    section: "Section 03 · Short-Run Exchange Rates", difficulty: "medium",
+    q: "The asset-market approach to short-run exchange rate determination differs fundamentally from the long-run goods-market approach because:",
+    options: [
+      "The long-run approach focuses on capital flows while the short-run approach focuses on goods prices and trade",
+      "In the short run, exchange rates are driven by expected relative returns on domestic versus foreign assets rather than by the prices of goods",
+      "The short-run approach assumes prices are flexible while the long-run approach treats prices as sticky and slow-adjusting",
+      "The short-run approach relies on PPP while the long-run approach is based on interest rate parity conditions"
+    ],
+    correct: 1,
+    explanation: "The key insight of the asset-market approach is that an exchange rate is the price of domestic currency — and therefore the price of domestic assets in terms of foreign assets. In the short run, prices are sticky and goods arbitrage is slow. What moves first and fastest is the demand for financial assets: investors constantly rebalance portfolios based on expected returns. Short-run FX equilibrium is therefore determined by interest rates and exchange rate expectations, not goods prices."
+  },
+
+  // ── Q7  correct: C ──────────────────────────────────────────────────────
+  {
+    section: "Section 03 · Short-Run Exchange Rates", difficulty: "hard",
+    q: "A central bank raises domestic interest rates. According to the asset-market model, the domestic currency will appreciate only under what condition?",
+    options: [
+      "The domestic money supply simultaneously contracts to validate and reinforce the rate rise",
+      "Foreign investors have unrestricted access to domestic bond markets so capital can flow freely",
+      "The rate rise reflects genuine real returns — if the increase is driven entirely by higher expected inflation, the currency may depreciate instead",
+      "The rate rise is pre-announced at least 30 days in advance so markets can adjust gradually"
+    ],
+    correct: 2,
+    explanation: "The key distinction is between real and inflation-driven rate increases. If rates rise because the central bank tightens to cool an overheating economy (genuine real returns), dollar assets become more attractive and the currency appreciates. However, if rates rise because inflation expectations are rising, investors also expect the currency to lose value over time — the expected inflation-depreciation can more than offset the nominal interest rate advantage, and the currency may actually fall. This is why both i_D and expected future exchange rates matter simultaneously."
+  },
+
+  // ── Q8  correct: D ──────────────────────────────────────────────────────
+  {
+    section: "Section 03 · Short-Run Exchange Rates", difficulty: "hard",
+    q: "The ECB significantly raised interest rates in 2022–23. According to the demand-for-dollar-assets framework, what was the direct effect on the US dollar?",
+    options: [
+      "Appreciation — higher eurozone rates signal stronger eurozone growth, which historically increases demand for dollar safe-haven assets",
+      "No change — the Federal Reserve controls the dollar's value and ECB policy has no direct transmission",
+      "Appreciation — as capital flows into Europe, the increased eurozone activity indirectly supports dollar demand",
+      "Depreciation — higher eurozone rates made euro-denominated assets more attractive relative to dollar assets, reducing demand for the dollar"
+    ],
+    correct: 3,
+    explanation: "In the asset-market framework, a rise in the foreign interest rate (i_F ↑) makes foreign assets relatively more attractive. Investors shift from dollar assets into euro assets, reducing demand for the dollar. The causal chain: i_F ↑ → expected return on € vs $ rises → demand for $ ↓ → E ↓ (dollar depreciates). The 2022–23 ECB tightening cycle contributed to a narrowing of the USD/EUR interest rate differential — a real-world example of this exact mechanism at work."
+  },
+
+  // ── Q9  correct: B ──────────────────────────────────────────────────────
+  {
+    section: "Section 03 · Short-Run Exchange Rates", difficulty: "calc",
+    q: "At t = 0, the $/£ exchange rate is 1.20. Over three years, US consumer prices rise by 15% while UK consumer prices rise by 5%. According to Purchasing Power Parity, approximately what should the $/£ rate be at t = 3?",
+    options: [
+      "1.14 — sterling depreciates because UK growth lags the US",
+      "1.31 — the dollar depreciates since US prices rose proportionally more: 1.20 × (1.15 ÷ 1.05) ≈ 1.31",
+      "1.20 — PPP predicts no exchange rate change when both countries experience positive inflation",
+      "1.38 — the full US inflation rate is applied directly to the exchange rate: 1.20 × 1.15 = 1.38"
+    ],
+    correct: 1,
+    explanation: "PPP says the exchange rate adjusts to reflect relative price level changes: E_new = E_old × (P_US_new / P_UK_new). Relative price change = 1.15 / 1.05 ≈ 1.095. New rate = 1.20 × 1.095 ≈ 1.31. Because US prices rose faster than UK prices, the dollar has lost relatively more purchasing power — so more dollars are now needed to buy each pound. Option D is wrong because it applies only the US inflation without accounting for UK inflation. Option A has the direction backwards."
+  },
+
+  // ── Q10  correct: B ──────────────────────────────────────────────────────
+  {
+    section: "Section 04 · Balance of Payments", difficulty: "medium",
+    q: "The balance of payments accounting identity states that:",
+    options: [
+      "The current account must always equal the financial account in absolute magnitude, leaving official reserves unchanged",
+      "The current account plus the financial account plus the change in official international reserves must sum to zero",
+      "A surplus on the current account must be matched by a surplus on the financial account",
+      "Trade in goods and services must balance independently of any capital or financial flows"
+    ],
+    correct: 1,
+    explanation: "The balance of payments is an accounting system. Every international transaction generates two entries of equal and opposite value. Therefore: Current Account + Financial Account + ΔOfficial Reserves = 0. If a country runs a current account deficit, it must by identity be financed by either net capital inflows (Financial Account surplus) or a drawdown of official reserves — or a combination of both. This identity holds always, by definition."
+  },
+
+  // ── Q11  correct: C ──────────────────────────────────────────────────────
+  {
+    section: "Section 04 · Balance of Payments", difficulty: "hard",
+    q: "A country runs a persistent, large current account deficit. Which of the following best explains why this might be a source of concern for policymakers?",
+    options: [
+      "It directly and immediately reduces GDP, since imports are subtracted from national output in the national accounts",
+      "It always indicates that the government is running a fiscal deficit, which crowds out productive private investment",
+      "It implies that foreigners' claims on domestic assets are growing continuously, creating vulnerability to a sudden reversal of capital inflows — a 'sudden stop' — that could trigger an exchange rate crisis",
+      "It must be exactly offset by an equal financial account surplus, which mechanically reduces domestic investment below its optimal level"
+    ],
+    correct: 2,
+    explanation: "A current account deficit means the country is spending more on foreign goods and services than it earns — the gap is financed by foreigners accumulating domestic assets (shares, bonds, property). Over time, foreign claims on domestic wealth grow. The risk is a 'sudden stop': if foreign investors lose confidence in the currency or economy, capital inflows can reverse sharply, the exchange rate collapses, and the country faces a crisis. This does not mean deficits are always harmful — the US ran 19th-century deficits that reflected productive investment inflows — but sustained deficits raise fragility."
+  },
+
+  // ── Q12  correct: D ──────────────────────────────────────────────────────
+  {
+    section: "Section 05 · Exchange Rate Regimes", difficulty: "hard",
+    q: "The 'impossible trinity' (policy trilemma) states that a country cannot simultaneously maintain which three objectives?",
+    options: [
+      "Low inflation, full employment, and a balanced current account",
+      "Fixed exchange rates, high domestic interest rates, and a balanced fiscal budget",
+      "A current account surplus, a financial account surplus, and growing official foreign reserves",
+      "A fixed exchange rate, free capital mobility, and an independent domestic monetary policy"
+    ],
+    correct: 3,
+    explanation: "The trilemma is a fundamental constraint: any two of the three are achievable, but not all three simultaneously. The logic is intuitive — if capital can flow freely and the exchange rate is fixed, the central bank must use interest rates to defend the peg, losing the ability to set rates for domestic stabilisation. The US and UK choose free capital + independent MP → floating rate. Hong Kong chooses fixed rate + free capital → no independent monetary policy (currency board). China historically chose fixed rate + independent MP → capital controls."
+  },
+
+  // ── Q13  correct: A ──────────────────────────────────────────────────────
+  {
+    section: "Section 05 · Exchange Rate Regimes", difficulty: "hard",
+    q: "A currency board differs from full dollarization primarily because:",
+    options: [
+      "Under a currency board the country retains its own currency — backed 100% by foreign reserves — whereas under dollarization the foreign currency replaces the domestic currency entirely; dollarization offers a stronger commitment but cannot easily be reversed",
+      "A currency board allows the central bank to set domestic interest rates independently, which dollarization does not permit",
+      "Dollarization retains a lender-of-last-resort function whereas a currency board does not, because the central bank still exists in name",
+      "A currency board requires a democratic referendum whereas dollarization can be implemented unilaterally by executive decision"
+    ],
+    correct: 0,
+    explanation: "Under a currency board (e.g. Hong Kong since 1983, Bulgaria), the domestic currency continues to circulate but every unit is backed by foreign currency reserves — the central bank stands ready to exchange at a fixed rate unconditionally. Under full dollarization (e.g. Ecuador, El Salvador, Panama using USD; Kosovo and Montenegro using EUR), the domestic currency is abolished entirely. Dollarization is an even stronger commitment because it cannot easily be reversed and the country has no independent monetary policy at all."
+  },
+
+  // ── Q14  correct: C ──────────────────────────────────────────────────────
+  {
+    section: "Section 05 · Exchange Rate Regimes", difficulty: "medium",
+    q: "Which of the following is a key disadvantage of exchange-rate targeting as a monetary policy strategy?",
+    options: [
+      "It is too technically complex for financial markets to understand, reducing overall monetary policy transparency",
+      "It prevents the government from collecting customs duty on imports, reducing fiscal revenue significantly",
+      "The domestic economy loses the ability to respond independently to domestic shocks, and any adverse shock to the anchor country is imported directly into the targeting country",
+      "It requires the central bank to hold zero foreign currency reserves, increasing vulnerability to speculative attack"
+    ],
+    correct: 2,
+    explanation: "Exchange-rate targeting sacrifices monetary policy independence. Once the rate is fixed, interest rates must be kept in line with the anchor country's rates to defend the peg — regardless of whether domestic conditions warrant a different stance. If the anchor country (say, Germany for smaller EU members) tightens policy to combat its own inflation, the targeting country must follow even if it is in recession. Shocks to the anchor are automatically transmitted. This was a central problem during the ERM crises of the early 1990s."
+  },
+
+  // ── Q15  correct: A ──────────────────────────────────────────────────────
+  {
+    section: "Section 06 · International Monetary Policy", difficulty: "medium",
+    q: "In an open economy, when a central bank tightens monetary policy by raising interest rates, the exchange rate channel of transmission works through:",
+    options: [
+      "Capital inflows attracted by higher domestic rates → domestic currency appreciates → exports become more expensive and imports cheaper → net exports fall, reinforcing the contractionary effect on aggregate demand",
+      "Higher interest rates directly reducing the cost of imports, lowering domestic inflation and raising real household purchasing power",
+      "Currency depreciation triggered by tighter credit conditions, making domestic goods cheaper and thereby boosting net exports",
+      "Higher rates reducing bank lending to export industries specifically, contracting the trade account and weakening the current account"
+    ],
+    correct: 0,
+    explanation: "The exchange rate channel operates through the capital account: higher domestic interest rates make domestic assets more attractive to international investors, drawing in capital inflows and appreciating the currency. A stronger currency makes exports more expensive for foreign buyers and imports cheaper domestically — both effects reduce net exports and hence aggregate demand. This amplifies the direct demand-dampening effect of higher borrowing costs, making the exchange rate channel an important additional transmission mechanism for open economies — unlike the textbook closed-economy model."
+  }
+
+];
+
+// ── STATE ────────────────────────────────────────
+let current = 0;
+let answers = new Array(QUESTIONS.length).fill(null);
+
+// ── INIT ─────────────────────────────────────────
+function init() {
+  buildNav();
+  renderQuestion(0);
+  updateHeader();
+}
+
+function buildNav() {
+  const grid = document.getElementById('navGrid');
+  grid.innerHTML = '';
+  QUESTIONS.forEach((_, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'nav-btn';
+    btn.id = `nav-${i}`;
+    btn.textContent = i + 1;
+    btn.onclick = () => goTo(i);
+    grid.appendChild(btn);
+  });
+}
+
+function updateNav() {
+  QUESTIONS.forEach((_, i) => {
+    const btn = document.getElementById(`nav-${i}`);
+    btn.className = 'nav-btn';
+    if (i === current) btn.classList.add('active');
+    if (answers[i] !== null)
+      btn.classList.add(answers[i].correct ? 'answered-correct' : 'answered-wrong');
+  });
+}
+
+function updateHeader() {
+  const answered = answers.filter(a => a !== null).length;
+  const correct  = answers.filter(a => a && a.correct).length;
+  document.getElementById('scoreDisplay').textContent = `${correct} / ${answered}`;
+  document.getElementById('progressFill').style.width = (answered / QUESTIONS.length * 100) + '%';
+  document.getElementById('progressText').textContent = `${answered} of ${QUESTIONS.length} answered`;
+}
+
+function goTo(i) {
+  current = i;
+  document.getElementById('resultsPanel').classList.remove('show');
+  document.getElementById('questionCard').style.display = '';
+  renderQuestion(i);
+  updateNav();
+}
+
+function renderQuestion(i) {
+  const q = QUESTIONS[i];
+  const answered = answers[i] !== null;
+  const L = ['A','B','C','D'];
+  const diffClass = { medium:'diff-medium', hard:'diff-hard', calc:'diff-calc' };
+  const diffLabel  = { medium:'Medium', hard:'Hard', calc:'∑ Calculation' };
+
+  const optionsHtml = q.options.map((opt, oi) => {
+    let cls = 'option-btn';
+    if (answered) {
+      cls += ' revealed';
+      if (oi === q.correct)            cls += ' correct';
+      else if (answers[i].chosen === oi) cls += ' wrong';
+      else                             cls += ' dimmed';
+    }
+    return `<button class="${cls}" onclick="choose(${i},${oi})" ${answered?'disabled':''}>
+      <span class="option-letter">${L[oi]}</span><span>${opt}</span>
+    </button>`;
+  }).join('');
+
+  const expHtml = answered
+    ? `<div class="explanation ${answers[i].correct?'correct-exp':'wrong-exp'} show">
+         <div class="exp-head">${answers[i].correct ? '✓ Correct' : '✗ Incorrect — Correct answer: '+L[q.correct]}</div>
+         ${q.explanation}
+       </div>`
+    : `<div class="explanation"></div>`;
+
+  const allAnswered = answers.every(a => a !== null);
+  const isLast = i === QUESTIONS.length - 1;
+
+  document.getElementById('questionCard').innerHTML = `
+    <div class="card-top">
+      <div class="q-meta">
+        <span class="q-number">Q${i+1} of ${QUESTIONS.length}</span>
+        <span class="q-section">${q.section}</span>
+      </div>
+      <span class="q-difficulty ${diffClass[q.difficulty]}">${diffLabel[q.difficulty]}</span>
+    </div>
+    <div class="card-body">
+      <div class="q-text">${q.q}</div>
+      <div class="options">${optionsHtml}</div>
+    </div>
+    ${expHtml}
+    <div class="card-footer">
+      <div class="nav-arrows">
+        <button class="btn-arrow" onclick="goTo(${i-1})" ${i===0?'disabled':''}>&#8592;</button>
+        <button class="btn-arrow" onclick="goTo(${i+1})" ${i===QUESTIONS.length-1?'disabled':''}>&#8594;</button>
+      </div>
+      ${allAnswered && isLast
+        ? `<button class="btn btn-primary" onclick="showResults()">View Results &rarr;</button>`
+        : answered
+          ? `<button class="btn btn-secondary" onclick="goTo(${Math.min(i+1,QUESTIONS.length-1)})">Next question &rarr;</button>`
+          : `<button class="btn btn-secondary" disabled>Select an answer</button>`
+      }
+    </div>`;
+}
+
+function choose(qi, oi) {
+  if (answers[qi] !== null) return;
+  answers[qi] = { chosen: oi, correct: oi === QUESTIONS[qi].correct };
+  updateHeader(); updateNav(); renderQuestion(qi);
+}
+
+function showResults() {
+  document.getElementById('questionCard').style.display = 'none';
+  const panel = document.getElementById('resultsPanel');
+  panel.classList.add('show');
+
+  const correct = answers.filter(a => a && a.correct).length;
+  const total   = QUESTIONS.length;
+  const pct     = Math.round(correct / total * 100);
+
+  const sections = {};
+  QUESTIONS.forEach((q, i) => {
+    const s = q.section.split('·')[0].trim();
+    if (!sections[s]) sections[s] = { correct:0, total:0 };
+    sections[s].total++;
+    if (answers[i] && answers[i].correct) sections[s].correct++;
+  });
+
+  const grade = pct>=80 ? 'Excellent — strong command of the material.'
+              : pct>=60 ? 'Good — review the slides on questions you missed.'
+              : pct>=40 ? 'Developing — revisit the relevant lecture sections.'
+              :           'Keep working — focus on the core concepts from each section.';
+
+  panel.innerHTML = `
+    <div class="results-header">
+      <div class="results-title">Quiz Complete</div>
+      <div class="results-subtitle">Money, Credit &amp; Banking · Week 9</div>
+      <div class="big-score">${correct}/${total}</div>
+      <div style="color:var(--gold-lt);font-size:15px;margin-bottom:4px;">${pct}%</div>
+    </div>
+    <div class="results-body">
+      <div style="font-size:13px;font-weight:600;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;">By Section</div>
+      <div class="section-breakdown">
+        ${Object.entries(sections).map(([s,d]) =>
+          `<div class="breakdown-item">
+            <div class="breakdown-section">${s}</div>
+            <div class="breakdown-score">${d.correct} / ${d.total}</div>
+          </div>`).join('')}
+      </div>
+      <button class="btn-restart" onclick="restart()">&#8635; Retake Quiz</button>
+    </div>`;
+}
+
+function restart() {
+  answers = new Array(QUESTIONS.length).fill(null);
+  document.getElementById('resultsPanel').classList.remove('show');
+  document.getElementById('questionCard').style.display = '';
+  current = 0;
+  buildNav(); updateNav(); updateHeader(); renderQuestion(0);
+}
+
+init();
+</script>
+</body>
+</html>
